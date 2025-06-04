@@ -9,25 +9,25 @@ export const ScraperHeader = () => {
       </div>
       
       <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-        Web Scraper Pro
+        Simple Web Scraper
       </h1>
       
       <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Extract content from any website with precision. Select specific elements, scrape text, images, and PDFs with ease.
+        Extract content from any website instantly. Just enter a URL and we'll find all the text, images, and PDF files for you.
       </p>
       
       <div className="flex justify-center gap-8 text-sm text-gray-500">
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4" />
-          <span>Text Content</span>
+          <span>All Text Content</span>
         </div>
         <div className="flex items-center gap-2">
           <Image className="w-4 h-4" />
-          <span>Images</span>
+          <span>All Images</span>
         </div>
         <div className="flex items-center gap-2">
           <Download className="w-4 h-4" />
-          <span>PDF Files</span>
+          <span>All PDF Files</span>
         </div>
       </div>
     </div>

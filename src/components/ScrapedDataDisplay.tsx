@@ -129,6 +129,41 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
     });
   };
 
+  const downloadTextFile = (text: string, index: number, filename?: string) => {
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename || `text-section-${index + 1}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Downloaded!",
+      description: filename ? "All text has been downloaded" : "Text section has been downloaded",
+    });
+  };
+
+  const downloadAllText = () => {
+    if (data.text.length === 0) {
+      toast({
+        title: "No text to download",
+        description: "There is no text content available to download",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Combine all text with double newlines between sections
+    const allText = data.text.join('\n\n');
+    const domain = new URL(data.url).hostname.replace('www.', '');
+    const filename = `all-text-from-${domain}-${new Date().toISOString().split('T')[0]}.txt`;
+    
+    downloadTextFile(allText, 0, filename);
+  };
+
   const formatTimestamp = (timestamp: string) => {
     return new Date(timestamp).toLocaleString();
   };
@@ -244,21 +279,45 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
           </TabsContent>
           
           <TabsContent value="text" className="mt-6">
+            <div className="flex justify-end mb-4">
+              <Button 
+                onClick={downloadAllText}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                disabled={data.text.length === 0}
+              >
+                <Download className="w-4 h-4" />
+                Download All Text
+              </Button>
+            </div>
             <ScrollArea className="h-96">
               <div className="space-y-4">
                 {data.text.length > 0 ? (
                   data.text.map((text, index) => (
                     <Card key={index} className="p-4 hover:shadow-md transition-shadow">
-                      <div className="flex justify-between items-start gap-4">
+                      <div className="flex justify-between items-start gap-2">
                         <p className="text-sm leading-relaxed flex-1">{text}</p>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleCopyToClipboard(text)}
-                          className="gap-1 shrink-0"
-                        >
-                          <Copy className="w-3 h-3" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => downloadTextFile(text, index)}
+                            className="gap-1 shrink-0 text-blue-600 hover:text-blue-700"
+                            title="Download text"
+                          >
+                            <Download className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleCopyToClipboard(text)}
+                            className="gap-1 shrink-0"
+                            title="Copy to clipboard"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </Button>
+                        </div>
                       </div>
                     </Card>
                   ))
@@ -341,11 +400,32 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
                             <Download className="w-5 h-5 text-red-600" />
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{pdf.title || 'PDF Document'}</p>
+                            <p className="font-medium text-sm">{pdf.title || 'Unnamed PDF'}</p>
                             <p className="text-xs text-gray-500 truncate max-w-md">{pdf.href}</p>
                           </div>
                         </div>
                         <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = pdf.href;
+                              link.download = pdf.title?.endsWith('.pdf') ? pdf.title : `${pdf.title || 'document'}.pdf`;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              
+                              toast({
+                                title: "Download started",
+                                description: "The PDF is being downloaded",
+                              });
+                            }}
+                            className="gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            Download
+                          </Button>
                           <Button
                             size="sm"
                             variant="outline"
@@ -360,6 +440,7 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
                             variant="ghost"
                             onClick={() => handleCopyToClipboard(pdf.href)}
                             className="gap-1"
+                            title="Copy link to clipboard"
                           >
                             <Copy className="w-3 h-3" />
                           </Button>

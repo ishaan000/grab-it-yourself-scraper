@@ -1,54 +1,74 @@
-# Welcome to your Lovable project
+# Grab It Yourself Scraper
 
-## Project info
+A modern web scraping application that allows you to extract text, images, and PDFs from any website with a clean, user-friendly interface. Built with React, TypeScript, and Vite, this scraper uses the Firecrawl API to efficiently extract content from web pages.
 
-**URL**: https://lovable.dev/projects/58101cbf-1815-458f-866a-0a89f1d4f5dc
+## ✨ Features
 
-## How can I edit this code?
+- 🌐 Extract text content from any website
+- 🖼️ Download images with alt text
+- 📄 Find and download PDF documents
+- 🔍 Simple and intuitive user interface
+- ⚡ Fast and efficient scraping using Firecrawl API
+- 🔒 Secure API key management
 
-There are several ways of editing your application.
+## 🚀 Getting Started
 
-**Use Lovable**
+### Prerequisites
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/58101cbf-1815-458f-866a-0a89f1d4f5dc) and start prompting.
+- Node.js (v16 or later)
+- npm or yarn
+- Firecrawl API key (get one from [Firecrawl](https://firecrawl.dev))
 
-Changes made via Lovable will be committed automatically to this repo.
+### Installation
 
-**Use your preferred IDE**
+1. Clone the repository:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+   ```sh
+   git clone https://github.com/ishaan000/grab-it-yourself-scraper.git
+   cd grab-it-yourself-scraper
+   ```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+2. Install dependencies:
 
-Follow these steps:
+   ```sh
+   npm install
+   ```
+
+3. Create a `.env` file in the root directory and add your Firecrawl API key:
+   ```env
+   VITE_FIRECRAWL_API_KEY=your_api_key_here
+   ```
+
+### Running the Application
+
+Start the development server:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 🛠️ Building for Production
 
-**Use GitHub Codespaces**
+To create a production build:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run build
+```
+
+The build artifacts will be stored in the `dist/` directory.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 🙏 Acknowledgments
+
+- [Lovable](https://lovable.dev) for the initial MVP and project scaffolding
+- [Firecrawl](https://firecrawl.dev) for the powerful web scraping API
+- [Shadcn UI](https://ui.shadcn.com/) for the beautiful UI components
+- [Vite](https://vitejs.dev/) for the fast development experience
 
 ## What technologies are used for this project?
 
@@ -59,15 +79,3 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/58101cbf-1815-458f-866a-0a89f1d4f5dc) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)

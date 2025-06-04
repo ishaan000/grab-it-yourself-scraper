@@ -1,9 +1,8 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ScraperForm } from '@/components/ScraperForm';
 import { ScrapedDataDisplay } from '@/components/ScrapedDataDisplay';
 import { ScraperHeader } from '@/components/ScraperHeader';
-import { ApiKeySetup } from '@/components/ApiKeySetup';
 import { FirecrawlService } from '@/services/FirecrawlService';
 
 export interface ScrapedData {
@@ -19,13 +18,6 @@ export interface ScrapedData {
 const Index = () => {
   const [scrapedData, setScrapedData] = useState<ScrapedData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasApiKey, setHasApiKey] = useState(false);
-
-  useEffect(() => {
-    // Check if API key exists on component mount
-    const apiKey = FirecrawlService.getApiKey();
-    setHasApiKey(!!apiKey);
-  }, []);
 
   const handleScrapeComplete = (data: ScrapedData) => {
     setScrapedData(data);
@@ -37,30 +29,20 @@ const Index = () => {
     setScrapedData(null);
   };
 
-  const handleApiKeySet = () => {
-    setHasApiKey(true);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <div className="container mx-auto px-4 py-8">
         <ScraperHeader />
         
         <div className="max-w-6xl mx-auto space-y-8">
-          {!hasApiKey ? (
-            <ApiKeySetup onApiKeySet={handleApiKeySet} />
-          ) : (
-            <>
-              <ScraperForm 
-                onScrapeStart={handleScrapeStart}
-                onScrapeComplete={handleScrapeComplete}
-                isLoading={isLoading}
-              />
-              
-              {scrapedData && (
-                <ScrapedDataDisplay data={scrapedData} />
-              )}
-            </>
+          <ScraperForm 
+            onScrapeStart={handleScrapeStart}
+            onScrapeComplete={handleScrapeComplete}
+            isLoading={isLoading}
+          />
+          
+          {scrapedData && (
+            <ScrapedDataDisplay data={scrapedData} />
           )}
         </div>
       </div>

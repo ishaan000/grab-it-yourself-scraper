@@ -14,16 +14,18 @@ interface FirecrawlResult {
 }
 
 export class FirecrawlService {
-  private static API_KEY_STORAGE_KEY = 'firecrawl_api_key';
-
-  static saveApiKey(apiKey: string): void {
-    localStorage.setItem(this.API_KEY_STORAGE_KEY, apiKey);
-    console.log('Firecrawl API key saved');
-  }
-
   static getApiKey(): string | null {
-    return localStorage.getItem(this.API_KEY_STORAGE_KEY);
+    // First try to get API key from environment variable
+    const envApiKey = import.meta.env.VITE_FIRECRAWL_API_KEY;
+    
+    if (envApiKey) {
+      return envApiKey;
+    }
+    
+    // Fallback to localStorage for backward compatibility
+    return localStorage.getItem('firecrawl_api_key');
   }
+
 
   static async scrapeWebsite(url: string): Promise<FirecrawlResult> {
     const apiKey = this.getApiKey();
@@ -48,7 +50,13 @@ export class FirecrawlService {
           },
           extractorOptions: {
             mode: 'llm-extraction-from-raw-html',
-            extractionPrompt: 'Extract all text content, image URLs with alt text, and PDF download links from this webpage'
+            extractionSchema: {
+              title: { type: 'string', description: 'The title of the webpage' },
+              description: { type: 'string', description: 'Meta description or summary of the webpage' },
+              textContent: { type: 'array', items: { type: 'string' }, description: 'Main text content from the webpage' },
+              images: { type: 'array', items: { type: 'object', properties: { src: { type: 'string' }, alt: { type: 'string' } } }, description: 'Images with their source URLs and alt text' },
+              pdfLinks: { type: 'array', items: { type: 'object', properties: { href: { type: 'string' }, title: { type: 'string' } } }, description: 'PDF links with their URLs and titles' }
+            }
           }
         }),
       });
@@ -80,20 +88,54 @@ export class FirecrawlService {
     }
   }
 
-  private static parseFirecrawlData(data: any, url: string) {
+  private static parseFirecrawlData(data: {
+    html?: string;
+    rawHtml?: string;
+    extractedData?: {
+      title?: string;
+      description?: string;
+      textContent?: string[];
+      images?: { src: string; alt: string }[];
+      pdfLinks?: { href: string; title: string }[];
+    };
+    title?: string;
+    description?: string;
+  }, url: string) {
+    // Use extracted data from LLM extraction if available
+    if (data.extractedData) {
+      const extractedData = data.extractedData;
+      
+      // Get text content from extracted data
+      const textContent = [];
+      if (extractedData.title) textContent.push(extractedData.title);
+      if (extractedData.description) textContent.push(extractedData.description);
+      if (extractedData.textContent && Array.isArray(extractedData.textContent)) {
+        textContent.push(...extractedData.textContent);
+      }
+      
+      // Get images and PDFs directly from extracted data
+      const images = extractedData.images || [];
+      const pdfs = extractedData.pdfLinks || [];
+      
+      return {
+        url,
+        timestamp: new Date().toISOString(),
+        title: extractedData.title || 'Scraped Content',
+        description: extractedData.description || 'Content extracted from website',
+        text: textContent,
+        images,
+        pdfs
+      };
+    }
+    
+    // Fallback to HTML parsing if no extracted data
     const html = data.html || data.rawHtml || '';
-    const markdown = data.markdown || '';
     
     // Extract text content
     const textContent = [];
     if (data.title) textContent.push(data.title);
     if (data.description) textContent.push(data.description);
-    if (markdown) {
-      // Split markdown into paragraphs and filter out empty ones
-      const paragraphs = markdown.split('\n\n').filter((p: string) => p.trim().length > 0);
-      textContent.push(...paragraphs);
-    }
-
+    
     // Extract images from HTML
     const images: { src: string; alt: string }[] = [];
     if (html) {

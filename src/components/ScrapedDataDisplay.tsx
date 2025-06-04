@@ -6,8 +6,39 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ScrapedData } from '@/pages/Index';
-import { FileText, Image, Download, Copy, ExternalLink, CheckCircle, AlertCircle } from 'lucide-react';
+import { FileText, Image, Download, Copy, ExternalLink, CheckCircle, AlertCircle, Save, FolderOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+// TypeScript interfaces for File System Access API
+interface FileSystemFileHandle {
+  createWritable: () => Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemWritableFileStream {
+  write: (data: string) => Promise<void>;
+  close: () => Promise<void>;
+}
+
+interface ShowSaveFilePickerOptions {
+  suggestedName?: string;
+  types?: Array<{
+    description: string;
+    accept: Record<string, string[]>;
+  }>;
+}
+
+// Extend Window interface to include File System Access API
+declare global {
+  interface Window {
+    showSaveFilePicker?: (options?: ShowSaveFilePickerOptions) => Promise<FileSystemFileHandle>;
+  }
+}
 
 interface ScrapedDataDisplayProps {
   data: ScrapedData;
@@ -17,13 +48,19 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const handleExportJSON = () => {
+  // Generate a filename based on current date
+  const getDefaultFilename = () => {
+    return `scraped-data-${new Date().toISOString().split('T')[0]}.json`;
+  };
+
+  // Handle traditional browser download (fallback method)
+  const handleBrowserDownload = () => {
     const jsonData = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonData], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `scraped-data-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = getDefaultFilename();
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -33,6 +70,55 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
       title: "Downloaded!",
       description: "Your scraped data has been saved as a JSON file",
     });
+  };
+
+  // Handle download using File System Access API (allows user to choose save location)
+  const handleSaveAs = async () => {
+    try {
+      // Check if File System Access API is supported
+      if (!window.showSaveFilePicker) {
+        toast({
+          title: "Not supported",
+          description: "Your browser doesn't support the File System Access API. Using fallback method.",
+          variant: "destructive",
+        });
+        handleBrowserDownload();
+        return;
+      }
+
+      const jsonData = JSON.stringify(data, null, 2);
+      
+      // Show the file picker
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: getDefaultFilename(),
+        types: [{
+          description: 'JSON File',
+          accept: {'application/json': ['.json']},
+        }],
+      });
+      
+      // Create a writable stream and write the data
+      const writable = await fileHandle.createWritable();
+      await writable.write(jsonData);
+      await writable.close();
+      
+      toast({
+        title: "Saved successfully!",
+        description: "Your scraped data has been saved to the location you selected",
+      });
+    } catch (error) {
+      // User might have cancelled the save dialog
+      const err = error as Error;
+      if (err.name !== 'AbortError') {
+        console.error('Error saving file:', err);
+        toast({
+          title: "Save failed",
+          description: "There was an error saving your file. Using fallback method.",
+          variant: "destructive",
+        });
+        handleBrowserDownload();
+      }
+    }
   };
 
   const handleCopyToClipboard = (text: string) => {
@@ -63,10 +149,24 @@ export const ScrapedDataDisplay = ({ data }: ScrapedDataDisplayProps) => {
               <p className="text-sm text-gray-600">Completed: {formatTimestamp(data.timestamp)}</p>
             </div>
           </div>
-          <Button onClick={handleExportJSON} variant="outline" className="gap-2">
-            <Download className="w-4 h-4" />
-            Download Data
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Download className="w-4 h-4" />
+                Download Data
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleSaveAs} className="cursor-pointer">
+                <FolderOpen className="w-4 h-4 mr-2" />
+                Save As... (Choose location)
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleBrowserDownload} className="cursor-pointer">
+                <Save className="w-4 h-4 mr-2" />
+                Quick Download
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
       

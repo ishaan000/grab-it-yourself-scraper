@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { ScrapedData } from '@/pages/Index';
-import { WebScraperService } from '@/services/WebScraperService';
+import { FirecrawlService } from '@/services/FirecrawlService';
 import { Globe, Loader2 } from 'lucide-react';
 
 interface ScraperFormProps {
@@ -40,12 +39,8 @@ export const ScraperForm = ({ onScrapeStart, onScrapeComplete, isLoading }: Scra
     onScrapeStart();
     
     try {
-      console.log('Starting scrape for URL:', processedUrl);
-      const result = await WebScraperService.scrapeWebsite(processedUrl, {
-        textSelector: 'p, h1, h2, h3, h4, h5, h6, span, div',
-        imageSelector: 'img',
-        pdfSelector: 'a[href$=".pdf"]',
-      });
+      console.log('Starting real scrape for URL:', processedUrl);
+      const result = await FirecrawlService.scrapeWebsite(processedUrl);
 
       if (result.success && result.data) {
         toast({
@@ -60,7 +55,7 @@ export const ScraperForm = ({ onScrapeStart, onScrapeComplete, isLoading }: Scra
       console.error('Scraping error:', error);
       toast({
         title: "Couldn't scrape that website",
-        description: "The website might be blocking automated access or the URL might be incorrect",
+        description: error instanceof Error ? error.message : "The website might be blocking automated access or the URL might be incorrect",
         variant: "destructive",
       });
       onScrapeComplete({
